@@ -6,14 +6,21 @@ public class Controller
 {
 	public static void main(String[] args)
 	{
-		ApiContextInitializer.init();
+		Scraper.scrape();
 		
-		TelegramBotsApi botsApi = new TelegramBotsApi();
-		
-		try {
-			botsApi.registerBot(new Bot());
-		} catch (TelegramApiException e) {
-			e.printStackTrace();
-		}
+//		ApiContextInitializer.init();
+//
+//		TelegramBotsApi botsApi = new TelegramBotsApi();
+//
+//		try
+//		{
+//			botsApi.registerBot(new Bot());
+//		}
+//		catch (TelegramApiException e)
+//		{
+//			e.printStackTrace();
+//		}
+//
+//		DatabaseManager.test();
 	}
 }
