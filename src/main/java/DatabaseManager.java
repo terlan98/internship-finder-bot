@@ -1,5 +1,9 @@
 import java.sql.*;
+import java.util.ArrayList;
 
+/**
+ * Handles all database-related tasks.
+ */
 public class DatabaseManager
 {
 	private static final String CONNECTION_URL = System.getenv("DB_URL");
@@ -7,10 +11,12 @@ public class DatabaseManager
 	private static final String PASSWORD = System.getenv("DB_PASSWORD");
 	
 	private static final String USERS_TABLE_NAME = "users";
+	private static final String POSTS_TABLE_NAME = "posts";
 	
-	public static void test()
+	public static ArrayList<Long> getChatIDs()
 	{
-		String query = "SELECT * FROM users";
+		String query = "SELECT chat_id FROM users";
+		ArrayList<Long> chatIDs = new ArrayList<>();
 		
 		try (Connection conn = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
 		     PreparedStatement ps = conn.prepareStatement(query);
@@ -18,37 +24,115 @@ public class DatabaseManager
 		{
 			while (rs.next())
 			{
-				String name = rs.getString("FIRST_NAME");
-				System.out.println(name);
+				Long chatID = rs.getLong("CHAT_ID");
+				chatIDs.add(chatID);
 			}
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
 		}
+		
+		return chatIDs;
 	}
 	
+	/**
+	 * Adds a new user to the DB.
+	 *
+	 * @param chatID
+	 * @param firstName
+	 * @return
+	 */
 	public static boolean addUser(Long chatID, String firstName)
 	{
-		String query = "INSERT INTO " + USERS_TABLE_NAME +" VALUES (" + chatID + ", '" + firstName + "');";
+		String query = "INSERT INTO " + USERS_TABLE_NAME + " VALUES (" + chatID + ", '" + firstName + "');";
+		
+		return executeDML(query);
+	}
+	
+	/**
+	 * Deletes the user with the specified chat id.
+	 *
+	 * @param chatID
+	 * @return
+	 */
+	public static boolean deleteUser(Long chatID)
+	{
+		String query = "DELETE FROM " + USERS_TABLE_NAME + " WHERE chat_id = " + chatID;
+		
+		return executeDML(query);
+	}
+	
+	/**
+	 * Returns the posts that have not been sent to the users.
+	 * This function is not idempotent. It marks the posts as 'sent' in DB before returning the result.
+	 */
+	public static ArrayList<Post> getNewPosts()
+	{
+		ArrayList<Post> posts = new ArrayList<>();
+		String query = "SELECT * FROM posts WHERE is_sent = false";
 		
 		try (Connection conn = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
-		     PreparedStatement ps = conn.prepareStatement(query))
+		     PreparedStatement ps = conn.prepareStatement(query);
+		     ResultSet rs = ps.executeQuery())
 		{
-			ps.executeUpdate();
-			return true;
+			while (rs.next())
+			{
+				String title = rs.getString("TITLE");
+				String url = rs.getString("URL");
+				String content = rs.getString("CONTENT");
+				
+				posts.add(new Post(title, url, content));
+			}
 		}
 		catch (SQLException e)
 		{
 			e.printStackTrace();
-			return false;
 		}
+		
+		String updateSentFlagQuery = "UPDATE " + POSTS_TABLE_NAME + " SET is_sent = true";
+		
+		executeDML(updateSentFlagQuery);
+		
+		return posts;
 	}
 	
-	public static boolean deleteUser(Long chatID) //TODO call this when error 403 is detected
+	/**
+	 * Adds the posts from the given ArrayList to DB.
+	 *
+	 * @param posts
+	 */
+	public static void addPosts(ArrayList<Post> posts)
 	{
-		String query = "DELETE FROM " + USERS_TABLE_NAME +" WHERE chat_id = " + chatID;
+		String query = "INSERT INTO " + POSTS_TABLE_NAME + "(url, title, content, is_sent) VALUES";
+		String valuesString = "";
 		
+		for (int i = 0, size = posts.size(); i < size; i++)
+		{
+			Post post = posts.get(i);
+			
+			valuesString += "('" + post.getUrl() + "', '" + post.getTitle() + "', '" + post.getContent() + "', false)";
+			
+			if (i != size - 1)
+			{
+				valuesString += ",";
+			}
+		}
+		
+		query += valuesString + "ON DUPLICATE KEY UPDATE is_sent = is_sent;"; // ignores already existing values
+
+		executeDML(query);
+	}
+	
+//	public static void deleteOldPosts(int numberOfPostsToDelete)
+//	{
+//		String query = "DELETE FROM posts ORDER BY id DESC LIMIT " + numberOfPostsToDelete;
+//
+//		executeDML(query);
+//	}
+	
+	private static boolean executeDML(String query)
+	{
 		try (Connection conn = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
 		     PreparedStatement ps = conn.prepareStatement(query))
 		{

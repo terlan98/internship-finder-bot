@@ -4,6 +4,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
 
 public class Bot extends TelegramLongPollingBot
@@ -40,6 +41,41 @@ public class Bot extends TelegramLongPollingBot
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	/**
+	 * Sends the given string to all users.
+	 * @param messageString
+	 */
+	public void sendToAll(String messageString)
+	{
+		ArrayList<Long> chatIDs = DatabaseManager.getChatIDs();
+		
+		for(Long id : chatIDs)
+		{
+			SendMessage message = new SendMessage()
+					.setChatId(id)
+					.setText(messageString)
+					.setParseMode("html");
+			try
+			{
+				execute(message);
+				Thread.sleep(1000); // to avoid Telegram Bot block (due to flooding).
+			}
+			catch (TelegramApiException | InterruptedException e)
+			{
+				if (e.toString().contains("[403]")) // user stopped the bot
+				{
+					CompletableFuture.supplyAsync(() -> DatabaseManager.deleteUser(id));
+				}
+				else
+				{
+					System.err.println(">>>COULD NOT SEND POSTS TO " + id);
+					e.printStackTrace();
+				}
+			}
+		}
+		
 	}
 	
 	@Override

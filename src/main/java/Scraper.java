@@ -17,12 +17,8 @@ public class Scraper
 			Document doc = Jsoup.connect("https://edumap.az/category/təcrubə-proqramlari/").get();
 			Elements posts = doc.getElementsByClass("post-title");
 			
-			int LIMIT = 2; // TODO Remove
-			
 			for (Element post : posts) // clicking on each post here
 			{
-				if (LIMIT == 0) break;
-				
 				String postLink = post.getElementsByTag("a").attr("href");
 				Document postPage = Jsoup.connect(postLink).get();
 				
@@ -32,10 +28,10 @@ public class Scraper
 				// Removing extraneous new lines and tabs
 				postContent = postContent.replaceAll("\\t|[\\n]{2,}","");
 				
-				System.out.println(postTitle + ":\n" + postContent + "\n-----------------------\n\n");
+				System.out.println(postLink);
+//				System.out.println(postTitle + ":\n" + postContent + "\n-----------------------\n\n");
 				
 				result.add(new Post(postTitle, postLink, postContent));
-				LIMIT--;
 			}
 		}
 		catch (IOException e)

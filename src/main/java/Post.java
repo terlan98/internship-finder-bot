@@ -25,4 +25,14 @@ public class Post
 	{
 		return content;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return "Post{" +
+				"title='" + title + '\'' +
+				", url='" + url + '\'' +
+				", content='" + content + '\'' +
+				'}';
+	}
 }
