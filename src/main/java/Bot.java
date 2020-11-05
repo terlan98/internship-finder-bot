@@ -66,6 +66,7 @@ public class Bot extends TelegramLongPollingBot
 			{
 				if (e.toString().contains("[403]")) // user stopped the bot
 				{
+					chatIDs.remove(id);
 					CompletableFuture.supplyAsync(() -> DatabaseManager.deleteUser(id));
 				}
 				else

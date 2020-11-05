@@ -124,13 +124,35 @@ public class DatabaseManager
 		executeDML(query);
 	}
 	
-//	public static void deleteOldPosts(int numberOfPostsToDelete)
-//	{
-//		String query = "DELETE FROM posts ORDER BY id DESC LIMIT " + numberOfPostsToDelete;
-//
-//		executeDML(query);
-//	}
+	/**
+	 * Deletes the specified number of posts from the bottom of the posts table iff the # of rows exceeds the given limit
+	 * @param rowLimit the max number of rows that can be allowed in the posts table.
+	 * @param numberOfPostsToDelete the number of posts to delete
+	 */
+	public static void deleteOldPosts(int rowLimit, int numberOfPostsToDelete)
+	{
+		String rowTestQuery = "SELECT IF(count(*) = " + rowLimit + ",'true','false') from " + POSTS_TABLE_NAME;
+		
+		try (Connection conn = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
+		     PreparedStatement ps = conn.prepareStatement(rowTestQuery);
+		     ResultSet rs = ps.executeQuery())
+		{
+			if(rs.getBoolean(0))
+			{
+				String deleteQuery = "DELETE FROM " + POSTS_TABLE_NAME + " ORDER BY id DESC LIMIT " + numberOfPostsToDelete;
+				executeDML(deleteQuery);
+			}
+		}
+		catch (SQLException e)
+		{
+			System.err.println("Couldn't delete old posts. Attempted deleting " + numberOfPostsToDelete + " with a row limit of " + rowLimit);
+			e.printStackTrace();
+		}
+	}
 	
+	/**
+	 * Executes the given DML query.
+	 */
 	private static boolean executeDML(String query)
 	{
 		try (Connection conn = DriverManager.getConnection(CONNECTION_URL, USERNAME, PASSWORD);
@@ -141,6 +163,7 @@ public class DatabaseManager
 		}
 		catch (SQLException e)
 		{
+			System.err.println("Failed DML query: " + query);
 			e.printStackTrace();
 			return false;
 		}

@@ -15,11 +15,11 @@ public class Scraper
 		try
 		{
 			Document doc = Jsoup.connect("https://edumap.az/category/təcrubə-proqramlari/").get();
-			Elements posts = doc.getElementsByClass("post-title");
+			Elements posts = doc.getElementsByClass("post-details");
 			
 			for (Element post : posts) // clicking on each post here
 			{
-				String postLink = post.getElementsByTag("a").attr("href");
+				String postLink = post.getElementsByClass("post-title").first().getElementsByTag("a").attr("href");
 				Document postPage = Jsoup.connect(postLink).get();
 				
 				String postTitle = postPage.getElementsByClass("post-title entry-title").first().text();

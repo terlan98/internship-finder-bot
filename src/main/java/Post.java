@@ -1,8 +1,8 @@
 public class Post
 {
-	private String title;
-	private String url;
-	private String content;
+	private final String title;
+	private final String url;
+	private final String content;
 	
 	public Post(String title, String url, String content)
 	{
@@ -34,5 +34,19 @@ public class Post
 				", url='" + url + '\'' +
 				", content='" + content + '\'' +
 				'}';
+	}
+	
+	/**
+	 * Returns a string that is formatted in a way that can be understood by the users.
+	 */
+	public String toMessageString()
+	{
+		String result = "";
+		
+		result += "<b>Başlıq: </b>" + getTitle();
+		result += "\n\n<b>Məlumat: </b>" + getContent();
+		result += "\n<b>Link: </b>" + getUrl();
+		
+		return result;
 	}
 }
