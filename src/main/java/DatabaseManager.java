@@ -137,6 +137,7 @@ public class DatabaseManager
 		     PreparedStatement ps = conn.prepareStatement(rowTestQuery);
 		     ResultSet rs = ps.executeQuery())
 		{
+			rs.next();
 			if(rs.getBoolean(0))
 			{
 				String deleteQuery = "DELETE FROM " + POSTS_TABLE_NAME + " ORDER BY id DESC LIMIT " + numberOfPostsToDelete;
