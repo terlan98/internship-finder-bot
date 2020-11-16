@@ -138,7 +138,7 @@ public class DatabaseManager
 		     ResultSet rs = ps.executeQuery())
 		{
 			rs.next();
-			if(rs.getBoolean(0))
+			if(rs.getBoolean(1))
 			{
 				String deleteQuery = "DELETE FROM " + POSTS_TABLE_NAME + " ORDER BY id DESC LIMIT " + numberOfPostsToDelete;
 				executeDML(deleteQuery);
